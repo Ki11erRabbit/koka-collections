@@ -84,7 +84,6 @@ pub fun bubble-up<a>(heap : binaryheap<a>, value : a) : <hash/hash<a>,div,exn|_e
 }
 
 fun bubble-up-loop<a>(heap : binaryheap<a>, value : a, pos : int ) : <exn,div,hash/hash<a>|e> binaryheap<a> {
-    println("pos: " ++ pos.show())
     if pos == 0 || pos / 2 == 0 {
         heap
     }
@@ -119,6 +118,82 @@ fun bubble-up-loop<a>(heap : binaryheap<a>, value : a, pos : int ) : <exn,div,ha
                 MinHeap -> heap
             }
             Eq -> heap
+        }
+    }
+}
+
+pub fun top<a>(heap : binaryheap<a>) : <exn> a {
+    heap.data[0].unwrap()
+}
+
+pub fun pop<a>(heap: binaryheap<a>) {
+    val ret_node = heap.data[0].unwrap()
+    var binaryheap := heap(position = heap.position.remove(ret_node), data = heap.data.drop(1))
+
+    if heap.position.length() >= 1 then {
+        val end_node = heap.data[heap.data.length() - 1].unwrap()
+        binaryheap := binaryheap(data = heap.data.take(heap.data.length() - 1))
+        binaryheap := binaryheap(position = binaryheap.position.insert(end_node, 1, data = Cons(end_node, binaryheap.data)))
+        binaryheap := binaryheap.sift-down(1)
+    }
+    else {
+        val end_node = heap.data[heap.data.length() - 1].unwrap()
+        binaryheap := binaryheap(data = heap.data.take(heap.data.length() - 1))
+        binaryheap := binaryheap(position = binaryheap.position.insert(end_node, 1, data = Cons(end_node, binaryheap.data)))
+        binaryheap
+    }
+}
+
+fun sift-down<a>(heap : binaryheap<a>, pos : int) {
+
+    var lowest := Nothing
+    for(pos * 2, pos * 2 + 2) fn (i : int) {
+        match lowest {
+            Nothing -> lowest := heap.data[i - 1]
+            Just(x) -> match (heap.cmp)(x, heap.data[i - 1].unwrap()) {
+                Gt -> match heap.min_max {
+                    MinHeap -> lowest := heap.data[i - 1]
+                    MaxHeap -> ()
+                }
+                Lt -> match heap.min_max {
+                    MinHeap -> ()
+                    MaxHeap -> lowest := heap.data[i - 1]
+                }
+                Eq -> ()
+            }
+        }
+    }
+
+    match lowest {
+        Nothing -> heap
+        Just(low) -> {
+            match (heap.cmp)(low, heap.data[pos - 1].unwrap()) {
+                Gt -> match heap.min_max {
+                    MinHeap -> {
+                        val node : a = heap.data[pos - 1].unwrap()
+                        val low_pos = heap.position.get(low).unwrap()
+                        val temp_pos = heap.position.get(node).unwrap()
+                        var binaryheap := heap(position = heap.position.insert(node, heap.position.get(low).unwrap()).insert(low, temp_pos))
+                        binaryheap := binaryheap(data = binaryheap.data.take(pos - 1) ++ Cons(low, binaryheap.data.drop(pos + 1 - 1)))
+                        binaryheap := binaryheap(data = binaryheap.data.take(low_pos - 1) ++ Cons(node, binaryheap.data.drop(low_pos + 1 - 1)))
+                        binaryheap.sift-down(pos + 1)
+                    }
+                    MaxHeap -> heap
+                }
+                Lt -> match heap.min_max {
+                    MaxHeap -> {
+                        val node : a = heap.data[pos - 1].unwrap()
+                        val low_pos = heap.position.get(low).unwrap()
+                        val temp_pos = heap.position.get(node).unwrap()
+                        var binaryheap := heap(position = heap.position.insert(node, heap.position.get(low).unwrap()).insert(low, temp_pos))
+                        binaryheap := binaryheap(data = binaryheap.data.take(pos - 1) ++ Cons(low, binaryheap.data.drop(pos + 1 - 1)))
+                        binaryheap := binaryheap(data = binaryheap.data.take(low_pos - 1) ++ Cons(node, binaryheap.data.drop(low_pos + 1 - 1)))
+                        binaryheap.sift-down(pos + 1)
+                    }
+                    MinHeap -> heap
+                }
+                Eq -> heap
+            }
         }
     }
 }

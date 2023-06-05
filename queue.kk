@@ -131,15 +131,15 @@ pub fun pop<a>(heap: binaryheap<a>) : <pure,hash/hash<a>|_e> binaryheap<a> {
     var binaryheap := heap(position = heap.position.remove(ret_node), data = heap.data.drop(1))
 
     if heap.position.length() >= 1 then {
-        val end_node = heap.data[heap.data.length() - 1].unwrap()
-        binaryheap := binaryheap(data = heap.data.take(heap.data.length() - 1))
+        val end_node = binaryheap.data[binaryheap.data.length() - 1].unwrap()
+        binaryheap := binaryheap(data = binaryheap.data.take(heap.data.length() - 2))
         binaryheap := binaryheap(position = binaryheap.position.insert(end_node, 1), data = Cons(end_node, binaryheap.data))
         binaryheap := binaryheap.sift-down(1)
         binaryheap
     }
     else {
-        val end_node = heap.data[heap.data.length() - 1].unwrap()
-        binaryheap := binaryheap(data = heap.data.take(heap.data.length() - 1))
+        val end_node = binaryheap.data[binaryheap.data.length() - 1].unwrap()
+        binaryheap := binaryheap(data = binaryheap.data.take(binaryheap.data.length() - 2))
         binaryheap := binaryheap(position = binaryheap.position.insert(end_node, 1), data = Cons(end_node, binaryheap.data))
         binaryheap
     }
@@ -174,7 +174,7 @@ fun sift-down-for-loop<a>(heap: binaryheap<a>, pos: int, i : int, lowest : maybe
 
 fun sift-down<a>(heap : binaryheap<a>, pos : int) : <div, exn, hash/hash<a>|_e> binaryheap<a> {
 
-    val lowest = sift-down-for-loop(heap, pos, pos * 2 + 1, Nothing)
+    val lowest = sift-down-for-loop(heap, pos, pos * 2, Nothing)
 
     match lowest {
         Nothing -> heap

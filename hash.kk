@@ -47,7 +47,7 @@ pub fun hashmap(cmp : (a,a) -> order) : hashmap<a,b> {
     Hashmap(0, [Nothing], cmp)
 }
 
-pub fun make-hashmap<a,b>(list : list<pair<a,b>>, cmp : (a,a) -> order) : <div,hash<a>|_e> hashmap<a,b> {
+pub fun make-hashmap<a,b>(list : list<pair<a,b>>, cmp : (a,a) -> order) : <exn,div,hash<a>|_e> hashmap<a,b> {
     list.foldl(hashmap(cmp)) fn (map, pair) {
         map.insert(pair.fst, pair.snd)
     }
@@ -70,10 +70,14 @@ fun rehash<a,b>(map: hashmap<a,b>) : <div, hash<a>|_e> hashmap<a,b> {
                     match new_table[hash_value] {
                         Nothing -> {
                             new_table := new_table.take(hash_value) ++ Cons(Just([pair]),new_table.drop(hash_value + 1))
+                            ()
                         }
                         Just(lst) -> {
                             match lst {
-                                Nothing -> ()
+                                Nothing ->  {
+                                    new_table := new_table.take(hash_value) ++ Cons(Just([pair]),new_table.drop(hash_value + 1))
+                                    ()
+                                }
                                 Just(row) -> {
                                     new_table := new_table.take(hash_value) ++ Cons(Just(row ++ [pair]), new_table.drop(hash_value + 1))
                                     ()
@@ -252,7 +256,7 @@ fun rehash<a>(set: hashset<a>) : <div, hash<a>|_e> hashset<a> {
                         }
                         Just(lst) -> {
                             match lst {
-                                Nothing -> ()
+                                Nothing -> new_table := new_table.take(hash_value) ++ Cons(Just([value]),new_table.drop(hash_value + 1))
                                 Just(row) -> {
                                     new_table := new_table.take(hash_value) ++ Cons(Just(row ++ [value]), new_table.drop(hash_value + 1))
                                     ()

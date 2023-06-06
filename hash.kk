@@ -113,15 +113,24 @@ pub fun insert<a,b>(map : hashmap<a,b>, key : a, value : b) : <hash<a>,exn,div|_
                     new_map(data = new_map.data.take(hash_value) ++ Cons(Just([Pair(key,value)]), new_map.data.drop(hash_value + 1)), amount = new_map.amount + 1)
                 }
                 Just(row) -> {
+                    var found := False
                     val new_row = row.filter() fn (pair) {
                         match (map.cmp)(pair.fst, key) {
                             Lt -> True
-                            Eq -> False
+                            Eq -> {
+                                found := True
+                                False
+                            }
                             Gt -> True
                         }
                     }
 
-                    new_map(data = new_map.data.take(hash_value) ++ Cons(Just(Cons(Pair(key,value), new_row)), new_map.data.drop(hash_value + 1)), amount = new_map.amount + 1)
+                    if found then {
+                        new_map(data = new_map.data.take(hash_value) ++ Cons(Just(Cons(Pair(key,value), new_row)), new_map.data.drop(hash_value + 1)))
+                    }
+                    else {
+                        new_map(data = new_map.data.take(hash_value) ++ Cons(Just(Cons(Pair(key,value), new_row)), new_map.data.drop(hash_value + 1)), amount = new_map.amount + 1)
+                    }
                 }
             }
         }
@@ -288,15 +297,24 @@ pub fun insert<a>(set : hashset<a>, key : a) : <hash<a>,exn,div|_e> hashset<a> {
                     new_set(data = new_set.data.take(hash_value) ++ Cons(Just([key]), new_set.data.drop(hash_value + 1)), amount = new_set.amount + 1)
                 }
                 Just(row) -> {
+                    var found := False
                     val new_row = row.filter() fn (k) {
                         match (new_set.cmp)(k, key) {
                             Lt -> True
-                            Eq -> False
+                            Eq -> {
+                                found := True
+                                False
+                            }
                             Gt -> True
                         }
                     }
 
-                    new_set(data = new_set.data.take(hash_value) ++ Cons(Just(Cons(key, new_row)), new_set.data.drop(hash_value + 1)), amount = new_set.amount + 1)
+                    if found then {
+                        new_set(data = new_set.data.take(hash_value) ++ Cons(Just(Cons(key, new_row)), new_set.data.drop(hash_value + 1)))
+                    }
+                    else {
+                        new_set(data = new_set.data.take(hash_value) ++ Cons(Just(Cons(key, new_row)), new_set.data.drop(hash_value + 1)), amount = new_set.amount + 1)
+                    }
                 }
             }
         }
@@ -330,26 +348,26 @@ pub fun get<a>(set : hashset<a>, key : a) : <div,hash<a>|_e> maybe<a> {
 
 pub fun remove<a>(set : hashset<a>, key : a) : <hash<a>,div|_e> hashset<a> {
         
-        val hash_value = key.hash() % set.data.length()
-        match set.data[hash_value] {
-            Nothing -> set
-            Just(mlist) -> {
-                match mlist {
-                    Nothing -> set
-                    Just(list) -> {
-                        
-                        var new_list := list.filter() fn (value) {
-                            match (set.cmp)(value, key) {
-                                Lt -> True
-                                Eq -> False
-                                Gt -> True
-                            }
+    val hash_value = key.hash() % set.data.length()
+    match set.data[hash_value] {
+        Nothing -> set
+        Just(mlist) -> {
+            match mlist {
+                Nothing -> set
+                Just(list) -> {
+                    
+                    var new_list := list.filter() fn (value) {
+                        match (set.cmp)(value, key) {
+                            Lt -> True
+                            Eq -> False
+                            Gt -> True
                         }
-                        set(data = set.data.take(hash_value) ++ Cons(Just(new_list), set.data.drop(hash_value + 1)), amount = set.amount - 1)
                     }
+                    set(data = set.data.take(hash_value) ++ Cons(Just(new_list), set.data.drop(hash_value + 1)), amount = set.amount - 1)
                 }
             }
         }
+    }
 }
 
 pub fun contains<a>(set : hashset<a>, key : a) : <div,hash<a>|_e> bool {

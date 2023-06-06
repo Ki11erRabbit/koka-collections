@@ -132,7 +132,10 @@ pub fun top<a>(heap : binaryheap<a>) : <exn> a {
     heap.data[0].unwrap()
 }
 
-pub fun pop<a>(heap: binaryheap<a>) : <debug<list<pair<a,int>>>,mydebug<a>,pure,hash/hash<a>|_e> binaryheap<a> {
+pub fun pop<a>(heap: binaryheap<a>) : <pure,hash/hash<a>|_e> binaryheap<a> {
+    if heap.data.length() == 0 then{
+        throw("pop called on empty heap")
+    }
     val ret_node = heap.data[0].unwrap()
     var binaryheap := heap(position = heap.position.remove(ret_node), data = heap.data.drop(1))
 
@@ -152,24 +155,24 @@ pub fun pop<a>(heap: binaryheap<a>) : <debug<list<pair<a,int>>>,mydebug<a>,pure,
 }
 
 
-fun sift-down-for-loop<a>(heap: binaryheap<a>, pos: int, i : int, lowest : maybe<a>) : <exn|_e> maybe<a> {
+fun sift-down-for-loop<a>(heap: binaryheap<a>, pos: int, i : int, lowest : maybe<a>) : <console,exn|_e> maybe<a> {
     if i == pos * 2 + 2 then {
         lowest
     }
-    elif i > heap.position.length() then {
+    elif i >= heap.position.length() then {
         lowest
     }
     else {
         match lowest {
-            Nothing -> sift-down-for-loop(heap, pos, i + 1, heap.data[i - 1])
-            Just(x) -> match (heap.cmp)(x, heap.data[i - 1].unwrap()) {
+            Nothing -> sift-down-for-loop(heap, pos, i + 1, heap.data[i])
+            Just(x) -> match (heap.cmp)(x, heap.data[i].unwrap()) {
                 Gt -> match heap.min_max {
-                    MinHeap -> sift-down-for-loop(heap, pos, i + 1, heap.data[i - 1])
+                    MinHeap -> sift-down-for-loop(heap, pos, i + 1, heap.data[i])
                     MaxHeap -> sift-down-for-loop(heap, pos, i + 1, lowest)
                 }
                 Lt -> match heap.min_max {
                     MinHeap -> sift-down-for-loop(heap, pos, i + 1, lowest)
-                    MaxHeap -> sift-down-for-loop(heap, pos, i + 1, heap.data[i - 1])
+                    MaxHeap -> sift-down-for-loop(heap, pos, i + 1, heap.data[i])
                 }
                 Eq -> sift-down-for-loop(heap, pos, i + 1, lowest)
             }
@@ -178,22 +181,9 @@ fun sift-down-for-loop<a>(heap: binaryheap<a>, pos: int, i : int, lowest : maybe
 }
 
 
-fun sift-down<a>(heap : binaryheap<a>, pos : int) : <debug<list<pair<a,int>>>,mydebug<a>, console, div, exn, hash/hash<a>|_e> binaryheap<a> {
-    println("pos: " ++ pos.show())
-    val lowest = sift-down-for-loop(heap, pos, pos * 2 - 1, Nothing)
-
-    match lowest
-        Nothing -> println("lowest: Nothing")
-        Just(low) -> println("lowest: Not Nothing")
-
-    match (heap.cmp)(lowest.unwrap(), heap.data[pos - 1].unwrap())
-        Gt -> println("lowest > heap.data[pos - 1]")
-        Lt -> println("lowest < heap.data[pos - 1]")
-        Eq -> println("lowest == heap.data[pos - 1]")
-
+fun sift-down<a>(heap : binaryheap<a>, pos : int) : <div, exn, hash/hash<a>|_e> binaryheap<a> {
     
-    println("positions: " ++ heap.position.values().show())
-
+    val lowest = sift-down-for-loop(heap, pos, pos * 2 - 1, Nothing)
     match lowest {
         Nothing -> heap
         Just(low) -> {
@@ -201,17 +191,10 @@ fun sift-down<a>(heap : binaryheap<a>, pos : int) : <debug<list<pair<a,int>>>,my
                 Lt -> match heap.min_max {
                     MinHeap -> {
                         val node = heap.data[pos - 1].unwrap()
-                        println("set node")
-                        println("low: " ++ low.mydebug()) 
-                        println(heap.position.list().debug())
                         val low_pos = heap.position.get(low).unwrap()
-                        println("set low_pos")
                         val binaryheap = heap(position = heap.position.insert(node, heap.position.get(low).unwrap()).insert(low, pos))
-                        println("set binaryheap")
                         val binaryheap = binaryheap(data = binaryheap.data.take(pos - 1) ++ Cons(low, binaryheap.data.drop(pos + 1 - 1)))
-                        println("set binaryheap")
                         val binaryheap = binaryheap(data = binaryheap.data.take(low_pos - 1) ++ Cons(node, binaryheap.data.drop(low_pos + 1 - 1)))
-                        println("position: " ++ binaryheap.position.get(node).show())
                         binaryheap.sift-down(binaryheap.position.get(node).unwrap())
                     }
                     MaxHeap -> heap

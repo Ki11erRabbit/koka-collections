@@ -305,26 +305,27 @@ pub fun insert<a>(set : hashset<a>, key : a) : <hash<a>,exn,div|_e> hashset<a> {
 
 pub fun get<a>(set : hashset<a>, key : a) : <div,hash<a>|_e> maybe<a> {
         
-        val hash_value = key.hash() % set.data.length();
-        match set.data[hash_value] {
-            Nothing -> Nothing
-            Just(lst) -> {
-                match lst {
-                    Nothing -> Nothing
-                    Just(list) -> {
-                        var value := Nothing
-                        list.foreach() fn (value) {
-                            match (set.cmp)(value, key) {
-                                Lt -> ()
-                                Eq -> value := Just(value)
-                                Gt -> ()
-                            }
+    val hash_value = key.hash() % set.data.length();
+    match set.data[hash_value] {
+        Nothing -> Nothing
+        Just(lst) -> {
+            match lst {
+                Nothing -> Nothing
+                Just(list) -> {
+                    
+
+                    val value = list.find() fn (value) {
+                        match (set.cmp)(value, key) {
+                            Lt -> False
+                            Eq -> True
+                            Gt -> False
                         }
-                        value
                     }
+                    value
                 }
             }
         }
+    }
 }
 
 pub fun remove<a>(set : hashset<a>, key : a) : <hash<a>,div|_e> hashset<a> {

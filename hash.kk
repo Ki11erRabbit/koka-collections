@@ -139,16 +139,14 @@ pub fun get<a,b>(map : hashmap<a,b>, key : a) : <div,hash<a>|_e> maybe<b> {
                 Nothing -> Nothing
                 Just(list) -> {
                     var value := Nothing
-                    match list[key.hash() % list.length()] {
-                        Nothing -> Nothing
-                        Just(pair) -> {
-                            match (map.cmp)(pair.fst, key) {
-                                Lt -> Nothing
-                                Eq -> Just(pair.snd)
-                                Gt -> Nothing
-                            }
+                    list.foreach() fn (pair) {
+                        match (map.cmp)(pair.fst, key) {
+                            Lt -> ()
+                            Eq -> value := Just(pair.snd)
+                            Gt -> ()
                         }
                     }
+                    value
                 }
             }
         }
@@ -315,16 +313,14 @@ pub fun get<a>(set : hashset<a>, key : a) : <div,hash<a>|_e> maybe<a> {
                     Nothing -> Nothing
                     Just(list) -> {
                         var value := Nothing
-                        match list[key.hash() % list.length()] {
-                            Nothing -> Nothing
-                            Just(value) -> {
-                                match (set.cmp)(value, key) {
-                                    Lt -> Nothing
-                                    Eq -> Just(value)
-                                    Gt -> Nothing
-                                }
+                        list.foreach() fn (value) {
+                            match (set.cmp)(value, key) {
+                                Lt -> ()
+                                Eq -> value := Just(value)
+                                Gt -> ()
                             }
                         }
+                        value
                     }
                 }
             }

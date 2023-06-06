@@ -19,6 +19,12 @@ fun expect(x : maybe<a>, msg : string) : <exn> a {
 }
 
 
+pub effect debug<d> {
+    fun debug(x : d) : string
+}
+pub effect mydebug<d> {
+    fun mydebug(x : d) : string
+}
 
 
 pub type heaptype
@@ -126,7 +132,7 @@ pub fun top<a>(heap : binaryheap<a>) : <exn> a {
     heap.data[0].unwrap()
 }
 
-pub fun pop<a>(heap: binaryheap<a>) : <pure,hash/hash<a>|_e> binaryheap<a> {
+pub fun pop<a>(heap: binaryheap<a>) : <debug<list<pair<a,int>>>,mydebug<a>,pure,hash/hash<a>|_e> binaryheap<a> {
     val ret_node = heap.data[0].unwrap()
     var binaryheap := heap(position = heap.position.remove(ret_node), data = heap.data.drop(1))
 
@@ -172,26 +178,45 @@ fun sift-down-for-loop<a>(heap: binaryheap<a>, pos: int, i : int, lowest : maybe
 }
 
 
-fun sift-down<a>(heap : binaryheap<a>, pos : int) : <console, div, exn, hash/hash<a>|_e> binaryheap<a> {
+fun sift-down<a>(heap : binaryheap<a>, pos : int) : <debug<list<pair<a,int>>>,mydebug<a>, console, div, exn, hash/hash<a>|_e> binaryheap<a> {
     println("pos: " ++ pos.show())
-    val lowest = sift-down-for-loop(heap, pos, pos * 2, Nothing)
+    val lowest = sift-down-for-loop(heap, pos, pos * 2 - 1, Nothing)
+
+    match lowest
+        Nothing -> println("lowest: Nothing")
+        Just(low) -> println("lowest: Not Nothing")
+
+    match (heap.cmp)(lowest.unwrap(), heap.data[pos - 1].unwrap())
+        Gt -> println("lowest > heap.data[pos - 1]")
+        Lt -> println("lowest < heap.data[pos - 1]")
+        Eq -> println("lowest == heap.data[pos - 1]")
+
+    
+    println("positions: " ++ heap.position.values().show())
 
     match lowest {
         Nothing -> heap
         Just(low) -> {
             match (heap.cmp)(low, heap.data[pos - 1].unwrap()) {
-                Gt -> match heap.min_max {
+                Lt -> match heap.min_max {
                     MinHeap -> {
                         val node = heap.data[pos - 1].unwrap()
+                        println("set node")
+                        println("low: " ++ low.mydebug()) 
+                        println(heap.position.list().debug())
                         val low_pos = heap.position.get(low).unwrap()
+                        println("set low_pos")
                         val binaryheap = heap(position = heap.position.insert(node, heap.position.get(low).unwrap()).insert(low, pos))
+                        println("set binaryheap")
                         val binaryheap = binaryheap(data = binaryheap.data.take(pos - 1) ++ Cons(low, binaryheap.data.drop(pos + 1 - 1)))
+                        println("set binaryheap")
                         val binaryheap = binaryheap(data = binaryheap.data.take(low_pos - 1) ++ Cons(node, binaryheap.data.drop(low_pos + 1 - 1)))
+                        println("position: " ++ binaryheap.position.get(node).show())
                         binaryheap.sift-down(binaryheap.position.get(node).unwrap())
                     }
                     MaxHeap -> heap
                 }
-                Lt -> match heap.min_max {
+                Gt -> match heap.min_max {
                     MaxHeap -> {
                         val node = heap.data[pos - 1].unwrap()
                         val low_pos = heap.position.get(low).unwrap()
@@ -220,6 +245,7 @@ pub fun list2<a>(heap : binaryheap<a>) : <div|_e> list<a> {
 pub fun list3(heap : binaryheap<a>) : <div|_e> list<int> {
     heap.position.values()
 }
+
 
 pub fun show(lst : list<hash/pair<int,int>>) : string {
     lst.map() fn (pair) {
